@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hexvox Crypto Payment Gateway</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#090d16',
+                        cardbg: '#111827',
+                        bordercolor: '#1f293d',
+                        accent: '#6366f1',
+                        accenthover: '#4f46e5'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QRious library for generating dynamic QR codes -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #090d16;
+            color: #f8fafc;
+        }
+        /* Custom smooth horizontal scrollbar */
+        .no-scrollbar::-webkit-scrollbar {
+            height: 6px;
+        }
+        .no-scrollbar::-webkit-scrollbar-track {
+            background: #0b0f19;
+            border-radius: 4px;
+        }
+        .no-scrollbar::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        .no-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #6366f1;
+        }
+        .crypto-card {
+            transition: all 0.25s ease;
+        }
+        .crypto-card:hover {
+            transform: translateY(-4px);
+            border-color: #6366f1;
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.25);
+        }
+        .crypto-card.selected {
+            border-color: #6366f1;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(17, 24, 39, 1) 100%);
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.35);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-3 sm:p-6">
+
+    <div class="w-full max-w-2xl bg-cardbg border border-bordercolor rounded-2xl shadow-2xl overflow-hidden p-5 sm:p-8 relative backdrop-blur-xl">
+        
+        <!-- Header Section -->
+        <div class="text-center mb-6">
+            <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600/30 to-purple-600/30 text-indigo-400 mb-3 border border-indigo-500/30 shadow-inner">
+                <i class="fa-solid fa-crown text-2xl"></i>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Hexvox Rango Premium</h1>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1">Obtén acceso total e ilimitado por un pago único de <span class="text-emerald-400 font-bold">$4.00 USD</span></p>
+        </div>
+
+        <!-- Carousel Section -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between mb-2">
+                <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                    Selecciona tu Criptomoneda de Pago:
+                </label>
+                <span class="text-[10px] text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">14 Opciones</span>
+            </div>
+            <div id="crypto-carousel" class="flex gap-3 overflow-x-auto no-scrollbar py-2 px-1 snap-x">
+                <!-- Cryptos injected dynamically via JS -->
+            </div>
+        </div>
+
+        <!-- Payment Details Panel -->
+        <div id="payment-panel" class="hidden border border-bordercolor bg-darkbg/70 rounded-xl p-4 sm:p-6 transition-all duration-300">
+            <!-- Loading State -->
+            <div id="loading-state" class="py-12 text-center flex flex-col items-center justify-center hidden">
+                <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4 shadow-lg shadow-indigo-500/30"></div>
+                <p id="loading-text" class="text-sm text-slate-200 font-semibold animate-pulse">Generando dirección única de FaucetPay...</p>
+                <p class="text-xs text-slate-500 mt-1">Conectando con pasarela segura segura...</p>
+            </div>
+
+            <!-- Content Active State -->
+            <div id="content-state" class="hidden">
+                <div class="flex items-center justify-between border-b border-bordercolor pb-3 mb-4">
+                    <div class="flex items-center gap-3">
+                        <div id="selected-icon-container" class="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-md"></div>
+                        <div>
+                            <h3 id="selected-coin-name" class="font-bold text-sm sm:text-base text-white">Bitcoin</h3>
+                            <p class="text-xs text-slate-400">Red: <span id="selected-coin-network" class="text-indigo-300 font-medium">Mainnet</span></p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] uppercase tracking-wider text-slate-400 block">Monto exacto</span>
+                        <span id="selected-coin-amount" class="font-black text-emerald-400 text-base sm:text-lg">0.000045 BTC</span>
+                    </div>
+                </div>
+
+                <!-- QR Code & Wallet Address Section -->
+                <div class="flex flex-col sm:flex-row items-center gap-5 bg-cardbg/80 p-4 rounded-xl border border-bordercolor/60">
+                    <div class="bg-white p-2.5 rounded-xl shadow-lg flex-shrink-0 flex items-center justify-center">
+                        <canvas id="qr-canvas" class="w-32 h-32 block"></canvas>
+                    </div>
+                    <div class="flex-1 w-full overflow-hidden text-center sm:text-left">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-xs font-medium text-slate-400">Dirección de depósito:</span>
+                            <span class="text-[10px] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"><i class="fa-solid fa-shield-check mr-1"></i>Verificada</span>
+                        </div>
+                        <div class="bg-darkbg p-3 rounded-lg border border-bordercolor font-mono text-xs text-slate-200 break-all mb-3 select-all shadow-inner text-left" id="wallet-address-text">
+                            --
+                        </div>
+                        <button onclick="copyAddress()" class="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-[0.98]">
+                            <i class="fa-regular fa-copy text-sm"></i> Copiar Dirección de Wallet
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Admin instructions alert -->
+                <div class="mt-4 p-3.5 bg-amber-500/10 border border-amber-500/25 rounded-xl text-xs text-amber-300 flex items-start gap-3 shadow-sm">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-base mt-0.5"></i>
+                    <div>
+                        <span class="font-bold block mb-0.5">Instrucciones de activación:</span>
+                        Envía exactamente el monto indicado arriba. Una vez completada la transferencia, toma una captura de pantalla y envíasela directamente al administrador para activar tu Rango Premium automáticamente.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Initial Placeholder State -->
+        <div id="initial-prompt" class="border border-dashed border-bordercolor rounded-xl p-8 text-center text-slate-400 text-sm bg-darkbg/30">
+            <i class="fa-solid fa-hand-pointer text-2xl text-indigo-400 mb-2 block"></i>
+            Selecciona una de las criptomonedas superiores para generar tu dirección de pago personalizada.
+        </div>
+
+        <!-- Success Toast Notification -->
+        <div id="toast" class="fixed bottom-6 right-6 bg-emerald-600 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-2xl transform translate-y-24 opacity-0 transition-all duration-300 flex items-center gap-2.5 z-50 border border-emerald-400/30">
+            <i class="fa-solid fa-circle-check text-base text-white"></i>
+            <span id="toast-msg">¡Dirección copiada al portapapeles con éxito!</span>
+        </div>
+
+    </div>
+
+    <script>
+        // Comprehensive Cryptocurrency Database with 14 tokens
+        const cryptoData = [
+            {
+                id: 'btc',
+                name: 'Bitcoin',
+                symbol: 'BTC',
+                network: 'Bitcoin Mainnet',
+                icon: 'fa-brands fa-bitcoin',
+                color: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+                address: '17me81ShRmc7rVwey7oCqgcrRuy9wSxBcV',
+                amount: '0.000042 BTC'
+            },
+            {
+                id: 'eth',
+                name: 'Ethereum',
+                symbol: 'ETH',
+                network: 'ERC20 Network',
+                icon: 'fa-brands fa-ethereum',
+                color: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+                address: '0xAa50218d32041a660DeA67Ef3182C372E0493Afb',
+                amount: '0.0016 ETH'
+            },
+            {
+                id: 'usdt',
+                name: 'Tether USDT',
+                symbol: 'USDT',
+                network: 'TRC20 / BEP20',
+                icon: 'fa-solid fa-dollar-sign',
+                color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+                address: '0xAa50218d32041a660DeA67Ef3182C372E0493Afb',
+                amount: '4.00 USDT'
+            },
+            {
+                id: 'usdc',
+                name: 'USD Coin',
+                symbol: 'USDC',
+                network: 'Polygon / ERC20',
+                icon: 'fa-solid fa-circle-dollar-to-slot',
+                color: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+                address: '2EUBK7zGni8uqdB9FKwtqU6iW7DzDV4GXeYd1GXRdBTe',
+                amount: '4.00 USDC'
+            },
+            {
+                id: 'bnb',
+                name: 'Binance Coin',
+                symbol: 'BNB',
+                network: 'BEP20 (Smart Chain)',
+                icon: 'fa-solid fa-coins',
+                color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
+                address: '0x61f7b0453351c726d33d860586C5e61a0bD89cB4',
+                amount: '0.0065 BNB'
+            },
+            {
+                id: 'ltc',
+                name: 'Litecoin',
+                symbol: 'LTC',
+                network: 'Litecoin Network',
+                icon: 'fa-solid fa-litecoin-sign',
+                color: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
+                address: 'ltc1q0qed237g82hemcxgmnaknzwk2frnp9fl6xjqlw',
+                amount: '0.048 LTC'
+            },
+            {
+                id: 'doge',
+                name: 'Dogecoin',
+                symbol: 'DOGE',
+                network: 'Dogecoin Network',
+                icon: 'fa-solid fa-dog',
+                color: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
+                address: 'DNcPsBhSjmGpzg3sKeHQeMEYd9tc6NWsRh',
+                amount: '22.50 DOGE'
+            },
+            {
+                id: 'sol',
+                name: 'Solana',
+                symbol: 'SOL',
+                network: 'Solana SPL',
+                icon: 'fa-solid fa-bolt',
+                color: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+                address: '2EUBK7zGni8uqdB9FKwtqU6iW7DzDV4GXeYd1GXRdBTe',
+                amount: '0.028 SOL'
+            },
+            {
+                id: 'trx',
+                name: 'TRON',
+                symbol: 'TRX',
+                network: 'TRC20 Network',
+                icon: 'fa-solid fa-triangle-exclamation',
+                color: 'bg-rose-500/20 text-rose-400 border-rose-500/30',
+                address: 'TTVYiydxVH6N7td2oNQN5arXrMJoajJ4y9',
+                amount: '32.00 TRX'
+            },
+            {
+                id: 'bch',
+                name: 'Bitcoin Cash',
+                symbol: 'BCH',
+                network: 'Bitcoin Cash Net',
+                icon: 'fa-solid fa-b',
+                color: 'bg-emerald-600/20 text-emerald-300 border-emerald-600/30',
+                address: 'bitcoincash:bitcoincash:qr8sggnj0ujz0fnv8v95encyt6eae8ztrc6ncda3p0',
+                amount: '0.011 BCH'
+            },
+            {
+                id: 'ton',
+                name: 'Toncoin',
+                symbol: 'TON',
+                network: 'TON Blockchain',
+                icon: 'fa-solid fa-gem',
+                color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30',
+                address: 'UQCQAQ4c83ttu_GQxWNMklnOgabzlQpQvXrLVRR9yAZEAlkf',
+                amount: '0.75 TON'
+            },
+            {
+                id: 'xmr',
+                name: 'Monero',
+                symbol: 'XMR',
+                network: 'Monero Network',
+                icon: 'fa-solid fa-user-secret',
+                color: 'bg-amber-600/20 text-amber-500 border-amber-600/30',
+                address: '4Bw5E7qSTCyUijTko5mQzSah8AQiJHnyV7XKBqwRkr6aWgRLNkUXvXkYrtVoj65GcmK7xQVCceJ6VgiCz4msqgdZ2Aui6ejTFsu4p3wssD',
+                amount: '0.024 XMR'
+            },
+            {
+                id: 'matic',
+                name: 'Polygon',
+                symbol: 'MATIC',
+                network: 'Polygon Network',
+                icon: 'fa-solid fa-shapes',
+                color: 'bg-violet-500/20 text-violet-400 border-violet-500/30',
+                address: '0x4d40EC338D5621b103Afa1a9617FA56579cb96Ae',
+                amount: '4.50 MATIC'
+            }
+        ];
+
+        let currentSelectedCrypto = null;
+        const carousel = document.getElementById('crypto-carousel');
+        const paymentPanel = document.getElementById('payment-panel');
+        const initialPrompt = document.getElementById('initial-prompt');
+        const loadingState = document.getElementById('loading-state');
+        const contentState = document.getElementById('content-state');
+
+        // Render Carousel Cards
+        function renderCarousel() {
+            carousel.innerHTML = '';
+            cryptoData.forEach(crypto => {
+                const card = document.createElement('div');
+                const isSelected = currentSelectedCrypto === crypto.id;
+                card.className = `crypto-card snap-start flex-shrink-0 w-28 sm:w-32 bg-darkbg border border-bordercolor rounded-xl p-3 cursor-pointer flex flex-col items-center text-center transition-all ${isSelected ? 'selected' : 'hover:border-indigo-500/50'}`;
+                card.onclick = () => selectCrypto(crypto.id);
+                card.innerHTML = `
+                    <div class="w-10 h-10 rounded-xl ${crypto.color} border flex items-center justify-center text-lg mb-2 shadow-sm">
+                        <i class="${crypto.icon}"></i>
+                    </div>
+                    <span class="font-bold text-xs tracking-tight text-white truncate w-full">${crypto.name}</span>
+                    <span class="text-[10px] text-slate-400 uppercase mt-0.5 font-medium">${crypto.symbol}</span>
+                `;
+                carousel.appendChild(card);
+            });
+        }
+
+        // Handle selection with 1.5s fluid loading state
+        function selectCrypto(cryptoId) {
+            currentSelectedCrypto = cryptoId;
+            renderCarousel();
+
+            initialPrompt.classList.add('hidden');
+            paymentPanel.classList.remove('hidden');
+            loadingState.classList.remove('hidden');
+            contentState.classList.add('hidden');
+
+            // 1.5 seconds loading timeout as requested
+            setTimeout(() => {
+                const crypto = cryptoData.find(c => c.id === cryptoId);
+                if (!crypto) return;
+
+                // Populate details
+                document.getElementById('selected-coin-name').innerText = crypto.name;
+                document.getElementById('selected-coin-network').innerText = crypto.network;
+                document.getElementById('selected-coin-amount').innerText = crypto.amount;
+                document.getElementById('wallet-address-text').innerText = crypto.address;
+
+                // Icon rendering container update
+                const iconContainer = document.getElementById('selected-icon-container');
+                iconContainer.className = `w-10 h-10 rounded-xl ${crypto.color} border flex items-center justify-center text-xl shadow-md`;
+                iconContainer.innerHTML = `<i class="${crypto.icon}"></i>`;
+
+                // Generate dynamic QR code using QRious
+                new QRious({
+                    element: document.getElementById('qr-canvas'),
+                    value: crypto.address,
+                    size: 130,
+                    background: '#ffffff',
+                    foreground: '#090d16'
+                });
+
+                loadingState.classList.add('hidden');
+                contentState.classList.remove('hidden');
+            }, 1500);
+        }
+
+        // Safe clipboard copy function robust against iframe restrictions
+        function copyAddress() {
+            const addressText = document.getElementById('wallet-address-text').innerText;
+            
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(addressText).then(() => {
+                    showToast();
+                }).catch(() => {
+                    fallbackCopy(addressText);
+                });
+            } else {
+                fallbackCopy(addressText);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast();
+            } catch (err) {
+                console.error('Error al copiar al portapapeles', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.remove('translate-y-24', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 2500);
+        }
+
+        // Initialize application on load
+        window.onload = () => {
+            renderCarousel();
+        };
+    </script>
+</body>
+</html>
