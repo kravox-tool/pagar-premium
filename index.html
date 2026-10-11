@@ -49,7 +49,7 @@
 <body class="min-h-screen bg-[#0f172a] text-slate-100 flex flex-col items-center justify-center p-4 selection:bg-indigo-500 selection:text-white">
 
     <!-- Main Container -->
-    <div class="max-w-md w-full space-y-4">
+    <div id="mainView" class="max-w-md w-full space-y-4">
         <h1 class="text-xl font-bold text-slate-100 mb-2">Selecciona Criptomoneda</h1>
 
         <!-- Select Box Card -->
@@ -146,22 +146,23 @@
         </div>
     </div>
 
-    <!-- Final QR & Address Modal -->
-    <div id="paymentModal" class="fixed inset-0 bg-[#0f172a]/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-[#1e293b] border border-slate-700 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            
-            <div class="flex items-center justify-between pb-3 border-b border-slate-700/50">
-                <div class="flex items-center space-x-2.5">
-                    <div id="finalModalCoinIcon" class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs">
-                        <i class="fa-brands fa-bitcoin"></i>
-                    </div>
-                    <span id="finalModalCoinTitle" class="text-sm font-bold text-white">Pago con Bitcoin</span>
+    <!-- Final QR & Address Screen (Full Menu / View instead of Modal) -->
+    <div id="paymentView" class="max-w-md w-full space-y-4 hidden">
+        <div class="flex items-center justify-between mb-2">
+            <button onclick="goBackToMain()" class="text-slate-400 hover:text-white text-xs flex items-center space-x-2 bg-[#1e293b] border border-slate-700 py-2 px-3 rounded-xl cursor-pointer transition-colors">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span>Volver</span>
+            </button>
+            <div class="flex items-center space-x-2.5">
+                <div id="finalModalCoinIcon" class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs">
+                    <i class="fa-brands fa-bitcoin"></i>
                 </div>
-                <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white cursor-pointer">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <span id="finalModalCoinTitle" class="text-sm font-bold text-white">Pago con Bitcoin</span>
             </div>
+        </div>
 
+        <div class="bg-[#1e293b] border border-slate-700/60 rounded-3xl p-6 space-y-5 shadow-2xl relative">
+            
             <!-- Plan & Price Summary Box -->
             <div class="bg-[#111827] border border-slate-700/80 rounded-2xl p-4 space-y-2 text-xs">
                 <div class="flex justify-between items-center text-slate-400">
@@ -179,7 +180,7 @@
                 <p class="text-xs text-slate-300">Escanea el código QR a continuación para pagar con tu billetera cripto:</p>
                 
                 <div class="bg-white p-3 rounded-2xl inline-block shadow-md mx-auto" id="qrcodeContainer">
-                    <!-- QR generated dynamically instantly -->
+                    <!-- QR generated dynamically cleanly -->
                 </div>
 
                 <p class="text-xs text-slate-400">O copia la dirección de <span id="coinNameSpan">Bitcoin</span> para realizar el pago:</p>
@@ -199,8 +200,8 @@
                 </div>
             </div>
 
-            <button onclick="closePaymentModal()" class="w-full bg-[#334155] hover:bg-[#475569] text-white font-semibold py-3 px-4 rounded-xl transition-colors text-xs cursor-pointer">
-                Ya realicé el pago / Cerrar
+            <button onclick="goBackToMain()" class="w-full bg-[#6366f1] hover:bg-[#4f46e5] text-white font-semibold py-3.5 px-4 rounded-xl transition-colors text-xs cursor-pointer shadow-lg shadow-indigo-600/30">
+                Ya realicé el pago / Volver
             </button>
         </div>
     </div>
@@ -269,7 +270,7 @@
 
             setTimeout(() => {
                 loadingModal.classList.add('hidden');
-                openFinalPaymentModal();
+                showPaymentView();
             }, 1200);
         }
 
@@ -277,9 +278,9 @@
             document.getElementById('loadingModal').classList.add('hidden');
         }
 
-        function openFinalPaymentModal() {
-            const modal = document.getElementById('paymentModal');
-            modal.classList.remove('hidden');
+        function showPaymentView() {
+            document.getElementById('mainView').classList.add('hidden');
+            document.getElementById('paymentView').classList.remove('hidden');
 
             document.getElementById('finalModalCoinIcon').className = `w-7 h-7 rounded-full ${selectedCrypto.color} flex items-center justify-center text-xs`;
             document.getElementById('finalModalCoinIcon').innerHTML = `<i class="${selectedCrypto.icon}"></i>`;
@@ -290,21 +291,18 @@
             document.getElementById('copyAlert').classList.add('hidden');
 
             const qrContainer = document.getElementById('qrcodeContainer');
-            qrContainer.innerHTML = '';
+            qrContainer.innerHTML = ''; // Completely clear container before rendering fresh QR code
+            qrInstance = null;
             
             try {
-                if (!qrInstance) {
-                    qrInstance = new QRCode(qrContainer, {
-                        text: selectedCrypto.address,
-                        width: 140,
-                        height: 140,
-                        colorDark: "#0f172a",
-                        colorLight: "#ffffff",
-                        correctLevel: QRCode.CorrectLevel.M
-                    });
-                } else {
-                    qrInstance.makeCode(selectedCrypto.address);
-                }
+                qrInstance = new QRCode(qrContainer, {
+                    text: selectedCrypto.address,
+                    width: 140,
+                    height: 140,
+                    colorDark: "#0f172a",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
             } catch (e) {
                 new QRCode(qrContainer, {
                     text: selectedCrypto.address,
@@ -314,8 +312,9 @@
             }
         }
 
-        function closePaymentModal() {
-            document.getElementById('paymentModal').classList.add('hidden');
+        function goBackToMain() {
+            document.getElementById('paymentView').classList.add('hidden');
+            document.getElementById('mainView').classList.remove('hidden');
         }
 
         function copyWalletAddress() {
@@ -343,4 +342,4 @@
         };
     </script>
 </body>
-    </html>
+                </html>
