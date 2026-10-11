@@ -1,63 +1,30 @@
 <!DOCTYPE html>
-<html lang="es" class="dark">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kravox - Rango Premium Vitalicio</title>
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        darkBg: '#0f172a',
-                        cardBg: '#1e293b',
-                        cardHover: '#334155',
-                        accent: '#6366f1',
-                        accentHover: '#4f46e5',
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- FontInter & FontAwesome -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Lightweight QR Code generator library -->
+    <!-- QRCode.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-        }
-        /* Custom scrollbar for dropdown */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #111827;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 4px;
-        }
-    </style>
 </head>
-<body class="min-h-screen bg-[#0f172a] text-slate-100 flex flex-col items-center justify-center p-4 selection:bg-indigo-500 selection:text-white">
+<body class="bg-[#0f172a] text-slate-100 min-h-screen flex items-center justify-center p-4">
 
-    <!-- Main Container -->
+    <!-- Main View -->
     <div id="mainView" class="max-w-md w-full space-y-4">
-        <h1 class="text-xl font-bold text-slate-100 mb-2">Selecciona Criptomoneda</h1>
+        <!-- Header -->
+        <div class="text-center space-y-1">
+            <h1 class="text-xl font-bold text-white">Kravox - Rango Premium Vitalicio</h1>
+            <p class="text-xs text-slate-400">Acceso VIP permanente por $4.00 USD</p>
+        </div>
 
-        <!-- Select Box Card -->
-        <div class="bg-[#1e293b] border border-slate-700/60 rounded-2xl p-4 shadow-lg space-y-3 relative">
-            <label class="block text-sm font-medium text-slate-300">Seleccionar criptomoneda</label>
-            
-            <!-- Custom Dropdown Trigger -->
-            <div onclick="toggleDropdown()" class="w-full bg-[#111827] border border-indigo-500 rounded-xl p-3.5 flex items-center justify-between cursor-pointer hover:border-indigo-400 transition-colors">
+        <!-- Crypto Selector Box -->
+        <div class="bg-[#1e293b] border border-slate-700/60 rounded-2xl p-4 space-y-3 relative shadow-lg">
+            <label class="block text-xs font-semibold text-slate-300">Criptomoneda de pago</label>
+            <div onclick="toggleDropdown()" class="bg-[#111827] border border-slate-700 rounded-xl p-3 flex items-center justify-between cursor-pointer hover:border-slate-500 transition-colors">
                 <div class="flex items-center space-x-3">
                     <div id="selectedDropdownIcon" class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm">
                         <i class="fa-brands fa-bitcoin"></i>
@@ -69,7 +36,7 @@
 
             <p class="text-xs text-slate-400">Selecciona la criptomoneda con la que deseas pagar</p>
 
-            <!-- Dropdown Options Menu (Hidden by default) -->
+            <!-- Dropdown Options Menu -->
             <div id="dropdownMenu" class="absolute left-4 right-4 top-24 bg-[#111827] border border-slate-700 rounded-2xl shadow-2xl z-30 max-h-64 overflow-y-auto hidden divide-y divide-slate-800">
                 <!-- Populated via JS -->
             </div>
@@ -99,37 +66,21 @@
         </div>
 
         <!-- Pay Button -->
-        <button onclick="startPaymentProcess()" class="w-full bg-[#6366f1] hover:bg-[#4f46e5] text-white font-bold py-4 px-6 rounded-2xl transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center space-x-2 cursor-pointer text-sm">
-            <span>Pagar con Cripto</span>
+        <button onclick="startPaymentProcess()" class="w-full bg-[#6366f1] hover:bg-[#4f46e5] text-white font-semibold py-3.5 px-4 rounded-xl transition-colors text-xs cursor-pointer shadow-lg shadow-indigo-600/30">
+            Pagar con Cripto
         </button>
     </div>
 
-    <!-- Loading Modal -->
-    <div id="loadingModal" class="fixed inset-0 bg-[#0f172a]/90 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-[#1e293b] border border-slate-700 rounded-3xl max-w-sm w-full p-6 text-center space-y-6 shadow-2xl relative">
-            
-            <div class="flex items-center justify-between pb-3 border-b border-slate-700/50">
-                <div class="flex items-center space-x-2.5">
-                    <div id="loadingModalCoinIcon" class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs">
-                        <i class="fa-brands fa-bitcoin"></i>
-                    </div>
-                    <span id="loadingModalCoinTitle" class="text-sm font-bold text-white">Pago con Bitcoin</span>
+    <!-- Loading Modal Screen -->
+    <div id="loadingModal" class="fixed inset-0 bg-[#0f172a]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-[#1e293b] border border-slate-700 rounded-3xl p-6 max-w-sm w-full space-y-5 shadow-2xl text-center">
+            <div class="flex items-center justify-center space-x-2.5">
+                <div id="loadingModalCoinIcon" class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs">
+                    <i class="fa-brands fa-bitcoin"></i>
                 </div>
-                <button onclick="closeLoadingModal()" class="text-slate-400 hover:text-white cursor-pointer">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <span id="loadingModalCoinTitle" class="text-sm font-bold text-white">Pago con Bitcoin</span>
             </div>
-
-            <!-- Loading Spinner -->
-            <div class="relative w-16 h-16 mx-auto my-4">
-                <div class="absolute inset-0 rounded-full border-4 border-slate-700"></div>
-                <div class="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin"></div>
-            </div>
-
-            <div class="text-sm font-semibold text-slate-200">Cargando opciones de pago...</div>
-
-            <!-- Steps checklist -->
-            <div class="space-y-3 text-left text-xs bg-[#111827] p-4 rounded-2xl border border-slate-800">
+            <div class="space-y-2 text-left text-xs">
                 <div class="flex items-center space-x-3 text-emerald-400 font-medium">
                     <div class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px]">✓</div>
                     <span>Creando pago</span>
@@ -146,7 +97,7 @@
         </div>
     </div>
 
-    <!-- Final QR & Address Screen (Full Menu / View instead of Modal) -->
+    <!-- Final QR & Address Screen -->
     <div id="paymentView" class="max-w-md w-full space-y-4 hidden">
         <div class="flex items-center justify-between mb-2">
             <button onclick="goBackToMain()" class="text-slate-400 hover:text-white text-xs flex items-center space-x-2 bg-[#1e293b] border border-slate-700 py-2 px-3 rounded-xl cursor-pointer transition-colors">
@@ -162,7 +113,6 @@
         </div>
 
         <div class="bg-[#1e293b] border border-slate-700/60 rounded-3xl p-6 space-y-5 shadow-2xl relative">
-            
             <!-- Plan & Price Summary Box -->
             <div class="bg-[#111827] border border-slate-700/80 rounded-2xl p-4 space-y-2 text-xs">
                 <div class="flex justify-between items-center text-slate-400">
@@ -179,9 +129,8 @@
             <div class="text-center space-y-3">
                 <p class="text-xs text-slate-300">Escanea el código QR a continuación para pagar con tu billetera cripto:</p>
                 
-                <div class="bg-white p-3 rounded-2xl inline-block shadow-md mx-auto" id="qrcodeContainer">
-                    <!-- QR generated dynamically cleanly -->
-                </div>
+                <!-- Contenedor QR con tamaño fijo predefinido para evitar errores de renderizado -->
+                <div class="bg-white p-3 rounded-2xl inline-block shadow-md mx-auto w-[164px] h-[164px] flex items-center justify-center" id="qrcodeContainer"></div>
 
                 <p class="text-xs text-slate-400">O copia la dirección de <span id="coinNameSpan">Bitcoin</span> para realizar el pago:</p>
 
@@ -208,7 +157,6 @@
 
     <!-- JavaScript Logic -->
     <script>
-        // Cryptocurrencies List with corresponding addresses and $4 USD equivalents
         const cryptos = [
             { id: 'btc', name: 'Bitcoin', symbol: 'BTC', icon: 'fa-brands fa-bitcoin', color: 'bg-amber-500/20 text-amber-400', address: '17me81ShRmc7rVwey7oCqgcrRuy9wSxBcV', amount: '0.000042 BTC' },
             { id: 'eth', name: 'Ethereum', symbol: 'ETH', icon: 'fa-brands fa-ethereum', color: 'bg-indigo-500/20 text-indigo-300', address: '0xAa50218d32041a660DeA67Ef3182C372E0493Afb', amount: '0.0016 ETH' },
@@ -217,7 +165,7 @@
             { id: 'bnb', name: 'Binance Coin', symbol: 'BNB', icon: 'fa-solid fa-coins', color: 'bg-yellow-500/20 text-yellow-400', address: '0x61f7b0453351c726d33d860586C5e61a0bD89cB4', amount: '0.0065 BNB' },
             { id: 'ltc', name: 'Litecoin', symbol: 'LTC', icon: 'fa-solid fa-litecoin-sign', color: 'bg-sky-500/20 text-sky-400', address: 'ltc1q0qed237g82hemcxgmnaknzwk2frnp9fl6xjqlw', amount: '0.048 LTC' },
             { id: 'doge', name: 'Dogecoin', symbol: 'DOGE', icon: 'fa-solid fa-dog', color: 'bg-orange-500/20 text-orange-400', address: 'DNcPsBhSjmGpzg3sKeHQeMEYd9tc6NWsRh', amount: '22.50 DOGE' },
-            { id: 'sol', name: 'Solana', symbol: 'SOL', icon: 'fa-solid fa-bolt', color: 'bg-purple-500/20 text-purple-400', address: '2EUBK7zGni8uqdB9FKwtqU6iW7DzDV4GXeYd1GXRdBTe', amount: '0.028 SOL' },
+            { id: 'sol', name: 'Solana', symbol: 'SOL', icon: 'fa-solid fa-bolt', color: 'bg-purple-500/20 text-purple-400', address: '2EUBK7zGni8uqdB9FKwtqU6iW7DzDV4GXRdBTe', amount: '0.028 SOL' },
             { id: 'trx', name: 'TRON', symbol: 'TRX', icon: 'fa-solid fa-triangle-exclamation', color: 'bg-rose-500/20 text-rose-400', address: 'TTVYiydxVH6N7td2oNQN5arXrMJoajJ4y9', amount: '32.00 TRX' },
             { id: 'bch', name: 'Bitcoin Cash', symbol: 'BCH', icon: 'fa-solid fa-b', color: 'bg-emerald-600/20 text-emerald-300', address: 'bitcoincash:qr8sggnj0ujz0fnv8v95encyt6eae8ztrc6ncda3p0', amount: '0.011 BCH' },
             { id: 'ton', name: 'Toncoin', symbol: 'TON', icon: 'fa-solid fa-gem', color: 'bg-cyan-500/20 text-cyan-400', address: 'UQCQAQ4c83ttu_GQxWNMklnOgabzlQpQvXrLVRR9yAZEAlkf', amount: '0.75 TON' },
@@ -226,7 +174,6 @@
         ];
 
         let selectedCrypto = cryptos[0];
-        let qrInstance = null;
 
         function renderDropdown() {
             const menu = document.getElementById('dropdownMenu');
@@ -271,11 +218,7 @@
             setTimeout(() => {
                 loadingModal.classList.add('hidden');
                 showPaymentView();
-            }, 1200);
-        }
-
-        function closeLoadingModal() {
-            document.getElementById('loadingModal').classList.add('hidden');
+            }, 800);
         }
 
         function showPaymentView() {
@@ -291,25 +234,17 @@
             document.getElementById('copyAlert').classList.add('hidden');
 
             const qrContainer = document.getElementById('qrcodeContainer');
-            qrContainer.innerHTML = ''; // Completely clear container before rendering fresh QR code
-            qrInstance = null;
+            qrContainer.innerHTML = ''; // Limpiar completamente el contenedor antes de dibujar
             
-            try {
-                qrInstance = new QRCode(qrContainer, {
-                    text: selectedCrypto.address,
-                    width: 140,
-                    height: 140,
-                    colorDark: "#0f172a",
-                    colorLight: "#ffffff",
-                    correctLevel: QRCode.CorrectLevel.M
-                });
-            } catch (e) {
-                new QRCode(qrContainer, {
-                    text: selectedCrypto.address,
-                    width: 140,
-                    height: 140
-                });
-            }
+            // Generar el código QR de forma limpia y directa
+            new QRCode(qrContainer, {
+                text: selectedCrypto.address,
+                width: 140,
+                height: 140,
+                colorDark: "#0f172a",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
         }
 
         function goBackToMain() {
@@ -326,7 +261,7 @@
                 document.execCommand('copy');
                 const alertEl = document.getElementById('copyAlert');
                 alertEl.classList.remove('hidden');
-                setTimeout(() => alertEl.classList.add('hidden'), 2500);
+                setTimeout(() => alertEl.classList.add('hidden'), 2000);
             } catch (err) {
                 console.error('Error al copiar', err);
             }
@@ -342,4 +277,4 @@
         };
     </script>
 </body>
-                </html>
+                        </html>
